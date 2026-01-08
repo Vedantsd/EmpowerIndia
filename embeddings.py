@@ -1,19 +1,14 @@
 import os
-import requests
+from dotenv import load_dotenv
+from langchain_community.vectorstores import FAISS
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
 
-HF_API = os.getenv("HF_API")
-API_URL = "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2"
+load_dotenv()
 
-headers = {
-    "Authorization": f"Bearer {HF_API}"
-}
+embeddings = HuggingFaceEndpointEmbeddings(
+    huggingfacehub_api_token=os.getenv("HF_API"),
+    repo_id="sentence-transformers/all-MiniLM-L6-v2"
+)
 
 def embed_text(text: str):
-    response = requests.post(
-        API_URL,
-        headers=headers,
-        json={"inputs": text}
-    )
-    response.raise_for_status()
-    embedding = response.json()
-    return embedding
+    return FAISS.from_texts(text, embedding=embeddings)
