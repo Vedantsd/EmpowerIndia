@@ -36,10 +36,12 @@ function addMessage(content, isUser) {
 
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+
+    const formattedContent = isUser ? content : formatMarkdown(content);
     
     messageDiv.innerHTML = `
         <div class="message-avatar">${isUser ? 'U' : '⚖️'}</div>
-        <div class="message-content">${content}</div>
+        <div class="message-content">${formattedContent}</div>
     `;
     
     chatMessages.appendChild(messageDiv);
@@ -102,4 +104,41 @@ async function sendMessage() {
         sendBtn.disabled = false;
         userInput.focus();
     }
+}
+
+
+
+function formatMarkdown(text) {
+    text = text.replace(/&/g, '&amp;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;');
+    
+    text = text.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    text = text.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+    text = text.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+    
+    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    
+    text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    text = text.replace(/_(.+?)_/g, '<em>$1</em>');
+    
+    text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+    
+    text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+    
+    text = text.replace(/^\* (.+)$/gim, '<li>$1</li>');
+    text = text.replace(/^- (.+)$/gim, '<li>$1</li>');
+    text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+    
+    text = text.replace(/^\d+\. (.+)$/gim, '<li>$1</li>');
+    
+    text = text.replace(/\n\n/g, '</p><p>');
+    text = text.replace(/\n/g, '<br>');
+    
+    if (!text.startsWith('<')) {
+        text = '<p>' + text + '</p>';
+    }
+    
+    return text;
 }
