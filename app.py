@@ -23,12 +23,11 @@ vectorstore = FAISS.load_local(
 )
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemini-pro')
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 conversation_history = {}
 
 def is_valid_legal_query(query: str) -> bool:
-    """Check if the query is related to legal matters"""
     legal_keywords = [
         'law', 'legal', 'rights', 'constitution', 'court', 'case', 'crime',
         'punishment', 'article', 'section', 'offense', 'complaint', 'police',
