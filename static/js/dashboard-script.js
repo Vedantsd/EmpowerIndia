@@ -120,23 +120,64 @@ function formatMarkdown(text) {
     text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     text = text.replace(/__(.+?)__/g, '<strong>$1</strong>');
     
-    text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    text = text.replace(/_(.+?)_/g, '<em>$1</em>');
+    text = text.replace(/\*([^*]+?)\*/g, '<em>$1</em>');
+    text = text.replace(/_([^_]+?)_/g, '<em>$1</em>');
     
     text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
     
     text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
     
-    text = text.replace(/^\* (.+)$/gim, '<li>$1</li>');
-    text = text.replace(/^- (.+)$/gim, '<li>$1</li>');
-    text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+    let lines = text.split('\n');
+    let inList = false;
+    let listType = null;
+    let processedLines = [];
     
-    text = text.replace(/^\d+\. (.+)$/gim, '<li>$1</li>');
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        
+        if (line.match(/^[\*\-]\s+(.+)/)) {
+            if (!inList || listType !== 'ul') {
+                if (inList) processedLines.push(`</${listType}>`);
+                processedLines.push('<ul>');
+                inList = true;
+                listType = 'ul';
+            }
+            processedLines.push(line.replace(/^[\*\-]\s+(.+)/, '<li>$1</li>'));
+        }
+
+        else if (line.match(/^\d+\.\s+(.+)/)) {
+            if (!inList || listType !== 'ol') {
+                if (inList) processedLines.push(`</${listType}>`);
+                processedLines.push('<ol>');
+                inList = true;
+                listType = 'ol';
+            }
+            processedLines.push(line.replace(/^\d+\.\s+(.+)/, '<li>$1</li>'));
+        }
+
+
+        else {
+            if (inList) {
+                processedLines.push(`</${listType}>`);
+                inList = false;
+                listType = null;
+            }
+            processedLines.push(line);
+        }
+    }
     
-    text = text.replace(/\n\n/g, '</p><p>');
+    if (inList) {
+        processedLines.push(`</${listType}>`);
+    }
+    
+    text = processedLines.join('\n');
+    
+    text = text.replace(/\n\n+/g, '</p><p>');
     text = text.replace(/\n/g, '<br>');
     
-    if (!text.startsWith('<')) {
+
+
+    if (!text.startsWith('<h') && !text.startsWith('<ul') && !text.startsWith('<ol') && !text.startsWith('<pre')) {
         text = '<p>' + text + '</p>';
     }
     
